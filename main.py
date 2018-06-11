@@ -19,15 +19,15 @@ submission_stream = subreddit.stream.submissions(skip_existing=True, pause_after
 
 while True:
     submission = next(submission_stream)
-    if submission:
-        if len(submission.selftext) == 0:
-            url = submission.url
-            if url.startswith("https://www.reddit.com"):
-                url = url[0:8] + 'old' + url[11:]
-            archive_url = archiveis.capture(url)
-            comment_text = f"[Here's]({archive_url}) an archived version of this thread.  \n" \
-                           f"[^^Source](https://github.com/kitegi/discount-gv)"
-            submission.reply(comment_text)
-            print("Reply sent successfully")
+    if submission and not submission.is_self:
+        url = submission.url
+        if url.startswith("https://www.reddit.com"):
+            url = url[0:8] + 'old' + url[11:]
+        archive_url = archiveis.capture(url)
+        comment_text = f"[Here's]({archive_url}) an archived version of this thread.  \n" \
+                       "[^^Source](https://github.com/kitegi/discount-gv)"
+        submission.reply(comment_text)
+        print("Reply sent")
     else:
-        sleep(60)
+        sleep(50)
+    sleep(10)
