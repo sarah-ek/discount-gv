@@ -3,6 +3,8 @@ import praw
 import csv
 from time import sleep
 
+def witty_quote():
+    return "Despite what Godel's Vortex said, I'm both CONSISTIENT and COMPLETE."
 
 def bot_login(identifiers):
     login = praw.Reddit(**identifiers)
@@ -24,7 +26,8 @@ while True:
         if url.startswith("https://www.reddit.com"):
             url = url[0:8] + 'old' + url[11:]
         archive_url = archiveis.capture(url)
-        comment_text = f"[Here's]({archive_url}) an archived version of this thread.  \n" \
+        comment_text = f"{witty_quote()}\n\n" \
+                       f"[Here's]({archive_url}) an archived version of this thread.  \n" \
                        "[^^Source](https://github.com/kitegi/discount-gv)"
         submission.reply(comment_text)
         print("Reply sent")
