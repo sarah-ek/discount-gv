@@ -8,8 +8,6 @@ with open("identifiers.csv") as id_csv:
     reader = csv.reader(id_csv)
     imported_id = {row[0]: row[1] for row in reader}
 
-print(imported_id)
-
 while True:
     try:
         reddit = func.bot_login(imported_id)
