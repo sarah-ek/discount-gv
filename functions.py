@@ -17,7 +17,8 @@ def witty_quote():
 
 
 def reply_to_missed(reddit, subreddit, number_limit=None, time_limit=None):
-    print("Replying to missed posts...")
+    print("Replying to missed submissions...")
+    count = 0
     submissions = subreddit.new(limit=number_limit)
     for submission in submissions:
         # If posts are too old, stop checking
@@ -32,6 +33,8 @@ def reply_to_missed(reddit, subreddit, number_limit=None, time_limit=None):
         else:
             # If loop is not broken, reply to submission
             archive_and_reply(submission)
+            count += 1
+    print(f"Replied to {count} submissions.")
 
 
 def archive_and_reply(submission, sleep_time=60):
