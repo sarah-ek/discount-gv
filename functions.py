@@ -1,10 +1,12 @@
 import praw
 import time
 import archiveis
-import random
+from random import randint
 
 with open("quotes.txt", "r") as quotes_file:
-    quotes = quotes_file.read().splitlines()
+    lines = quotes_file.read().splitlines()
+    quotes = lines[::2]
+    references = lines[1::2]
 
 for (i, quote) in enumerate(quotes):
     quotes[i] = quote.replace("\\n", "\n")
@@ -16,7 +18,8 @@ def bot_login(identifiers):
 
 
 def witty_quote():
-    return random.choice(quotes)
+    i = randint(0,len(quotes)-1)
+    return quotes[i], references[i]
 
 
 def reply_to_missed(reddit, subreddit, number_limit=None, time_limit=None):
@@ -46,11 +49,13 @@ def archive_and_reply(submission, sleep_time=60):
         if url.startswith("https://www.reddit.com"):
             url = url[0:8] + 'old' + url[11:]
         archive_url = archiveis.capture(url)
-        comment_text = f"{witty_quote()}\n\n" \
-                       f"[Here's]({archive_url}) an archived version of this thread.\n\n" \
-                       "[^^Source](https://github.com/kitegi/discount-gv) ^^| " \
-                       "[^^Submit ^^more ^^quotes]" \
-                       "(https://www.reddit.com/message/compose/?to=Discount-GV)"
+        quote, reference = witty_quote()
+        comment_text = f"{quote}\n\n" \
+                f"[Here's]({archive_url}) an archived version of this thread.\n\n" \
+                f"{('[^^Quote](' + reference +') ^^| ') if reference != 'NONE' else ''}" \
+                "[^^Source](https://github.com/kitegi/discount-gv) ^^| " \
+                "[^^Submit ^^more ^^quotes]" \
+                "(https://www.reddit.com/message/compose/?to=Discount-GV)"
         submission.reply(comment_text)
         print("Reply sent")
     elif not submission:
