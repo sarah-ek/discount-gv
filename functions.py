@@ -40,7 +40,7 @@ def reply_to_missed(reddit, subreddit, number_limit=None, time_limit=None):
             # If loop is not broken, reply to submission
             archive_and_reply(submission)
             count += 1
-    print(f"Found {count} submissions.")
+    print(f"Found {count} submission{'s' if count > 1 else ''}.")
 
 
 def archive_and_reply(submission, sleep_time=60):
