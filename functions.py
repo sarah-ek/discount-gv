@@ -18,7 +18,7 @@ def bot_login(identifiers):
 
 
 def witty_quote():
-    i = randint(0,len(quotes)-1)
+    i = randint(0, len(quotes) - 1)
     return quotes[i], references[i]
 
 
@@ -47,15 +47,17 @@ def archive_and_reply(submission, sleep_time=60):
     if submission and not submission.is_self:
         url = submission.url
         if url.startswith("https://www.reddit.com"):
-            url = url[0:8] + 'old' + url[11:]
+            url = url[0:8] + "old" + url[11:]
         archive_url = archiveis.capture(url)
         quote, reference = witty_quote()
-        comment_text = f"{quote}\n\n" \
-                f"[Here's]({archive_url}) an archived version of this thread.\n\n" \
-                f"{('[^^Quote](' + reference +') ^^| ') if reference != 'NONE' else ''}" \
-                "[^^Source](https://github.com/kitegi/discount-gv) ^^| " \
-                "[^^Submit ^^more ^^quotes]" \
-                "(https://www.reddit.com/message/compose/?to=Discount-GV)"
+        comment_text = (
+            f"{quote}\n\n"
+            f"[Here's]({archive_url}) an archived version of this thread.\n\n"
+            f"{('[^^Quote](' + reference +') ^^| ') if reference != 'NONE' else ''}"
+            "[^^Source](https://github.com/kitegi/discount-gv) ^^| "
+            "[^^Send ^^a ^^message]"
+            "(https://www.reddit.com/message/compose/?to=Discount-GV)"
+        )
         submission.reply(comment_text)
         print("Reply sent")
     elif not submission:
