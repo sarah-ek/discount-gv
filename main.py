@@ -12,7 +12,9 @@ while True:
     try:
         reddit = func.bot_login(imported_id)
         subreddit = reddit.subreddit("badmathematics")
-        submission_stream = subreddit.stream.submissions(skip_existing=True, pause_after=0)
+        submission_stream = subreddit.stream.submissions(
+            skip_existing=True, pause_after=0
+        )
         func.reply_to_missed(reddit, subreddit, number_limit=5, time_limit=1800)
         for submission in submission_stream:
             if submission:
