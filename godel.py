@@ -119,14 +119,16 @@ def reply_text(post: Submission, log_files: List[TextIOWrapper]) -> str:
                 if is_reddit_link(url):
                     url = "https://old." + url[url.find("reddit") :]
                 archive_url = archivenow.push(url, "ia")[0]
-                if archive_url.startswith("https://"):
-                    comment_text = comment_text + f"* [{url_name}]({archive_url})\n"
+                if not archive_url.startswith("https://"):
+                    archive_url = url
+                comment_text = comment_text + f"* [{url_name}]({archive_url})\n"
             for link in links:
                 url_name = link.text
                 url = link.get("href")
                 archive_url = archivenow.push(url, "ia")[0]
-                if archive_url.startswith("https://"):
-                    comment_text = comment_text + f"* [{url_name}]({archive_url})\n"
+                if not archive_url.startswith("https://"):
+                    archive_url = url
+                comment_text = comment_text + f"* [{url_name}]({archive_url})\n"
 
         elif len(links) == 1:
             log(" · Found single link")
@@ -141,10 +143,11 @@ def reply_text(post: Submission, log_files: List[TextIOWrapper]) -> str:
         if is_reddit_link(url):
             url = "https://old." + url[url.find("reddit") :]
         archive_url = archivenow.push(url, "ia")[0]
-        if archive_url.startswith("https://"):
-            comment_text = (
-                comment_text + f"[Here's]({archive_url}) a snapshot of the linked page."
-            )
+        if not archive_url.startswith("https://"):
+            archive_url = url
+        comment_text = (
+            comment_text + f"[Here's]({archive_url}) a snapshot of the linked page."
+        )
     comment_text = comment_text + signature(source_url)
     log(f" - Comment text:\n{comment_text}")
     return comment_text
