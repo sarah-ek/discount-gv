@@ -16,6 +16,16 @@ with open("quotes.txt", "r") as quotes_file:
     QUOTES = list(map(lambda quote: quote.replace("\\n", "\n"), lines[::2]))
     REFERENCES = lines[1::2]
 
+REDDIT_PREFIXES = list(
+    map(
+        lambda t: t[0] + t[1],
+        product(
+            ["https://", "http://"],
+            ["www.reddit.com", "i.reddit.com", "old.reddit.com", "reddit.com",],
+        ),
+    )
+)
+
 
 def bot_login(identifiers):
     login = praw.Reddit(**identifiers)
@@ -70,19 +80,20 @@ def reply_to_missed(
         log(f"{count} submission{{}} found.".format("s" if count > 1 else ""))
 
 
-REDDIT_PREFIXES = list(
-    map(
-        lambda t: t[0] + t[1],
-        product(
-            ["https://", "http://"],
-            ["www.reddit.com", "i.reddit.com", "old.reddit.com", "reddit.com",],
-        ),
-    )
-)
-
-
 def is_reddit_link(l: str) -> bool:
     return any(map(lambda prefix: l.startswith(prefix), REDDIT_PREFIXES))
+
+
+def archive_url(url):
+    # Convert link to old.reddit.com
+    if is_reddit_link(url):
+        url = "https://old." + url[url.find("reddit") :]
+    archived_url = archivenow.push(url, "ia")[0]
+
+    # If archiving fails, return the original link
+    if not archived_url.startswith("https://"):
+        archived_url = url
+    return archived_url
 
 
 def reply_text(post: Submission, log_files: List[TextIOWrapper]) -> str:
@@ -97,16 +108,21 @@ def reply_text(post: Submission, log_files: List[TextIOWrapper]) -> str:
         log(" · Self post")
         text = post.selftext
         document = etree.fromstring(f"<items>{markdown(text)}</items>")
+
+        # Markdown-formatted links
         links = document.xpath("//a")
+        # Unformated links
         raw_links = [
             w.rstrip(",.:;")
             for w in text.split()
             if w.startswith("https://") or w.startswith("http://")
         ]
+
         if not links and not raw_links:
             log(" · No links found")
             return
 
+        # List the links in the post
         elif len(links) + len(raw_links) > 1:
             log(" · Found multipe links")
             multiple_links = True
@@ -116,19 +132,14 @@ def reply_text(post: Submission, log_files: List[TextIOWrapper]) -> str:
             for link in raw_links:
                 url_name = link
                 url = link
-                if is_reddit_link(url):
-                    url = "https://old." + url[url.find("reddit") :]
-                archive_url = archivenow.push(url, "ia")[0]
-                if not archive_url.startswith("https://"):
-                    archive_url = url
-                comment_text = comment_text + f"* [{url_name}]({archive_url})\n"
+                archived_url = archive_url(url)
+                comment_text = comment_text + f"* [{url_name}]({archived_url})\n"
+
             for link in links:
                 url_name = link.text
                 url = link.get("href")
-                archive_url = archivenow.push(url, "ia")[0]
-                if not archive_url.startswith("https://"):
-                    archive_url = url
-                comment_text = comment_text + f"* [{url_name}]({archive_url})\n"
+                archived_url = archive_url(url)
+                comment_text = comment_text + f"* [{url_name}]({archived_url})\n"
 
         elif len(links) == 1:
             log(" · Found single link")
@@ -140,13 +151,9 @@ def reply_text(post: Submission, log_files: List[TextIOWrapper]) -> str:
     if not multiple_links:
         url: str = post.url
 
-        if is_reddit_link(url):
-            url = "https://old." + url[url.find("reddit") :]
-        archive_url = archivenow.push(url, "ia")[0]
-        if not archive_url.startswith("https://"):
-            archive_url = url
+        archived_url = archive_url(url)
         comment_text = (
-            comment_text + f"[Here's]({archive_url}) a snapshot of the linked page."
+            comment_text + f"[Here's]({archived_url}) a snapshot of the linked page."
         )
     comment_text = comment_text + signature(source_url)
     log(f" - Comment text:\n{comment_text}")
