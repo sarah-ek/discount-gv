@@ -2,6 +2,8 @@ from datetime import datetime
 from io import TextIOWrapper
 from pathlib import Path
 from random import randint
+from itertools import product, chain
+from typing import List
 
 import praw
 from archiveis import capture
@@ -34,12 +36,14 @@ def signature(source_url):
     )
 
 
-def reply_to_missed(reddit, subreddit, number_limit=None, time_limit=None):
+def reply_to_missed(
+    reddit, subreddit, log_files: List[TextIOWrapper], number_limit=None, time_limit=None
+):
+    log = lambda s: [print(s, file=log_file) for log_file in log_files]
     count = 0
     submissions = subreddit.new(limit=number_limit)
 
     now = datetime.utcnow()
-    log_file = open("logs/" + now.strftime("%Y-%m-%d.txt"), "a")
 
     for submission in submissions:
         # Stop checking if posts are too old
@@ -54,54 +58,80 @@ def reply_to_missed(reddit, subreddit, number_limit=None, time_limit=None):
                 already_repled = True
                 break
         if not already_repled:
-            archive_and_reply(submission, log_file)
+            archive_and_reply(submission, log_files)
             count += 1
     if count == 0:
-        print("No submissions found.", file=log_file)
+        log("No submissions found.")
     else:
-        print(
-            f"{count} submission{{}} found.".format("s" if count > 1 else ""),
-            file=log_file,
-        )
-    log_file.close()
+        log(f"{count} submission{{}} found.".format("s" if count > 1 else ""))
 
 
-def archive_and_reply(post: Submission, log_file: TextIOWrapper) -> None:
-    print(post.title, file=log_file)
+REDDIT_PREFIXES = map(
+    lambda t: t[0] + t[1],
+    product(
+        ["https://", "http://"],
+        ["www.reddit.com", "i.reddit.com", "old.reddit.com", "reddit.com",],
+    ),
+)
+
+
+def is_reddit_link(l: str) -> bool:
+    return any(map(lambda prefix: l.startswith(prefix), REDDIT_PREFIXES))
+
+
+def archive_and_reply(post: Submission, log_files: List[TextIOWrapper]) -> None:
+    log = lambda s: [print(s, file=log_file) for log_file in log_files]
+    log("\n" + 79 * "-")
+    log(f" - Title: {post.title}")
     quote, source_url = witty_quote()
     comment_text = f"{quote}\n\n"
     multiple_links = False
 
     if post.is_self:
+        log(" · Self post")
         text = post.selftext
-        document = etree.fromstring("<items>" + markdown(text) + "</items>")
+        document = etree.fromstring(f"<items>{markdown(text)}</items>")
         links = document.xpath("//a")
-        if not links:
+        raw_links = [
+            w for w in text.split() if w.startswith("https://") or w.startswith("http://")
+        ]
+        if not links and not raw_links:
+            log(" · No links found")
             return
-        if len(links) > 1:
+
+        elif len(links) + len(raw_links) > 1:
+            log(" · Found multipe links")
             multiple_links = True
 
-            comment_text = (
-                comment_text + "Here are archived versions to the linked pages.  \n"
-            )
+            comment_text = comment_text + "Here are snapshots of the linked pages.  \n"
+
+            for link in raw_links:
+                url_name = link
+                url = link
+                archive_url = capture(url)
+                comment_text = comment_text + f"* [{url_name}]({archive_url})\n"
             for link in links:
                 url_name = link.text
                 url = link.get("href")
                 archive_url = capture(url)
                 comment_text = comment_text + f"* [{url_name}]({archive_url})\n"
-        else:
+
+        elif len(links) == 1:
+            log(" · Found single link")
             url = links[0].get("href")
+        else:
+            log(" · Found single link")
+            url = raw_links[0]
 
     if not multiple_links:
-        url = post.url
-        if url.startswith("https://www.reddit.com"):
-            url = url[0:8] + "old" + url[11:]
+        url: str = post.url
+
+        if is_reddit_link(url):
+            url = "https://old." + url[url.find("reddit")]
         archive_url = capture(url)
         comment_text = (
-            comment_text
-            + f"[Here's]({archive_url}) an archived version to the linked page."
+            comment_text + f"[Here's]({archive_url}) a snapshot of the linked page."
         )
     comment_text = comment_text + signature(source_url)
-    print(comment_text, file=log_file)
-    print(50*"-", file=log_file)
+    log(f" - Comment text:\n{comment_text}")
     post.reply(comment_text)
