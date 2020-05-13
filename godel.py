@@ -111,7 +111,7 @@ def reply_text(post: Submission, log_files: List[TextIOWrapper]) -> str:
 
         # Markdown-formatted links
         links = document.xpath("//a")
-        # Unformated links
+        # Unformatted links
         raw_links = [
             w.rstrip(",.:;")
             for w in text.split()
