@@ -104,6 +104,7 @@ def reply_text(post: Submission, log_files: List[TextIOWrapper]) -> str:
     comment_text = f"{quote}\n\n"
     multiple_links = False
 
+    url: str
     if post.is_self:
         log(" · Self post")
         text = post.selftext
@@ -147,9 +148,10 @@ def reply_text(post: Submission, log_files: List[TextIOWrapper]) -> str:
         else:
             log(" · Found single link")
             url = raw_links[0]
+    else:
+        url = post.url
 
     if not multiple_links:
-        url: str = post.url
 
         archived_url = archive_url(url)
         comment_text = (
