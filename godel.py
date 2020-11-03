@@ -42,7 +42,7 @@ def signature(source_url):
         f"\n\n{('[^^Quote](' + source_url +') ^^| ') if source_url != 'NONE' else ''}"
         "[^^Source](https://github.com/kitegi/discount-gv) ^^| "
         "[^^Go ^^vegan](https://veganbootcamp.org/) ^^| "
-        "[^^ Stop ^^funding ^^animal ^^exploitation](https://www.youtube.com/watch?v=LQRAfJyEsko)"
+        "[^^Stop ^^funding ^^animal ^^exploitation](https://www.youtube.com/watch?v=LQRAfJyEsko)"
     )
 
 
