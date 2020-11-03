@@ -21,7 +21,7 @@ REDDIT_PREFIXES = list(
         lambda t: t[0] + t[1],
         product(
             ["https://", "http://"],
-            ["www.reddit.com", "i.reddit.com", "old.reddit.com", "reddit.com",],
+            ["www.reddit.com", "i.reddit.com", "old.reddit.com", "reddit.com"],
         ),
     )
 )
@@ -41,8 +41,8 @@ def signature(source_url):
     return (
         f"\n\n{('[^^Quote](' + source_url +') ^^| ') if source_url != 'NONE' else ''}"
         "[^^Source](https://github.com/kitegi/discount-gv) ^^| "
-        "[^^Send ^^a ^^message]"
-        "(https://www.reddit.com/message/compose/?to=Discount-GV)"
+        "[^^Go ^^vegan](https://veganbootcamp.org/) ^^| "
+        "[^^ Stop ^^funding ^^animal ^^exploitation](https://www.youtube.com/watch?v=LQRAfJyEsko)"
     )
 
 
